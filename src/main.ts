@@ -53,15 +53,15 @@ const bootstrap = async () => {
   return app
 }
 
+const logger = new Logger('bootstrap')
+
 bootstrap()
   .then(() => {
-    const logger = new Logger('bootstrap')
     logger.log(
       `App bootstrap successful => ${APP_LISTEN_CONFIG.host}:${APP_LISTEN_CONFIG.port}`,
     )
   })
   .catch((error) => {
-    const logger = new Logger('bootstrap')
     logger.error('Failed to start application', error)
     process.exit(1)
   })
