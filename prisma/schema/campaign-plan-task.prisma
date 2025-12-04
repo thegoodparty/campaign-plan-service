@@ -16,23 +16,24 @@ enum CampaignPlanTaskStatus {
 
 model CampaignPlanTask {
     id              String                  @id @default(uuid(7)) @db.Uuid
-    campaignPlanId  String                  @db.Uuid    @map("campaign_plan_id")
-    plan            CampaignPlan            @relation(fields: [campaignPlanId], references: [id], onDelete: Cascade)
+    planId          String                  @db.Uuid @map("plan_id")
+    plan            CampaignPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
     type            CampaignPlanTaskType    
     title           String
     description     String
     dueDate         DateTime?               @db.Date @map("due_date")
-    weekIndex       Int?
-    status          CampaignTaskStatus      @default(notStarted)
-    actionUrl       String?
+    weekIndex       Int?                    @map("week_index")
+    status          CampaignPlanTaskStatus  @default(notStarted)
+    actionUrl       String?                 @map("action_url")
     priority        Int?
     tags            String[]                @default([])
-    metadata        Json                    @map("{}")
-    createdAt       DateTime                @default(now()) @db.Timestamptz(6)
-    updatedAt       DateTime                @updatedAt @db.Timestamptz(6)
+    metadata        Json?                   @map("metadata")
+    createdAt       DateTime                @default(now()) @db.Timestamptz(6) @map("created_at")
+    updatedAt       DateTime                @updatedAt @db.Timestamptz(6) @map("updated_at")
 
     @@index([planId])
     @@index([dueDate])
     @@index([type])
     @@index([status])
+    @@map("campaign_plan_tasks")
 }

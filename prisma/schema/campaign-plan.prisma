@@ -12,7 +12,6 @@ model CampaignPlan {
     status              PlanStatus  @default(queued)
     idempotencyKey      String      @unique @map("idempotency_key")
     model               String
-    planJson            Json        @map("plan_json")
     costJson            Json?       @map("cost_json")
     sourceReason        String?     @map("source_reason")
     createdAt           DateTime    @default(now()) @db.Timestamptz(6)  @map("created_at")
@@ -20,6 +19,7 @@ model CampaignPlan {
     completedAt         DateTime?                   @db.Timestamptz(6)  @map("completed_at")
     errorMessage        String?     @map("error_message")
     tasks               CampaignPlanTask[]
+    sections            CampaignPlanSection[]
 
     @@index([campaignId, version(sort: Desc)])
     @@index([campaignId, status])
