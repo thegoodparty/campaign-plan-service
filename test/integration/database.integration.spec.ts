@@ -223,8 +223,14 @@ describe('Database Integration', () => {
           idempotencyKey: `test-immutability-${Date.now()}`,
           aiModel: 'gpt-4',
           cost: {
-            totalCost: 100,
-            breakdown: { apiCalls: 50, processing: 50 },
+            totalCost: 0.05,
+            currency: 'USD',
+            inputTokens: 1000,
+            outputTokens: 500,
+            breakdown: {
+              inputCost: 0.03,
+              outputCost: 0.02,
+            },
           },
         },
       })
@@ -237,7 +243,19 @@ describe('Database Integration', () => {
         prisma.campaignPlan.update({
           where: { id: plan.id },
           data: {
-            cost: { totalCost: 200 },
+            cost: {
+              totalCost: 200,
+              inputTokens: 2000,
+              outputTokens: 1000,
+              breakdown: {
+                inputCost: 100,
+                outputCost: 100,
+              },
+              // Optionally set required nullable fields if present in your schema
+              // currency: 'USD',
+              // cachedTokens: 0,
+              // calculatedAt: new Date().toISOString(),
+            },
           },
         }),
       ).rejects.toThrow('cost is immutable')

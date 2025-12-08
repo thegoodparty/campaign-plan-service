@@ -32,4 +32,10 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    files: ['prisma/schema/jsontypes/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-namespace': 'off',
+    },
+  },
 );
