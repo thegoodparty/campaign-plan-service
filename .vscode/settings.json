@@ -1,0 +1,10 @@
+{
+    // Format files on save in THIS project
+    "editor.formatOnSave": true,
+  
+    // Tell VS Code to use Prettier when formatting
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  
+    // Make sure Prettier actually reads your project config
+    "prettier.requireConfig": true
+  }

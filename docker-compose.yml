@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17.5
+    image: postgres:18.1
     container_name: cps-postgres
     environment:
       POSTGRES_USER: postgres
