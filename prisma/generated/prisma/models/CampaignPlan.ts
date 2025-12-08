@@ -42,7 +42,7 @@ export type CampaignPlanMinAggregateOutputType = {
   version: number | null
   status: $Enums.PlanStatus | null
   idempotencyKey: string | null
-  model: string | null
+  aiModel: string | null
   sourceReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -56,7 +56,7 @@ export type CampaignPlanMaxAggregateOutputType = {
   version: number | null
   status: $Enums.PlanStatus | null
   idempotencyKey: string | null
-  model: string | null
+  aiModel: string | null
   sourceReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -70,8 +70,8 @@ export type CampaignPlanCountAggregateOutputType = {
   version: number
   status: number
   idempotencyKey: number
-  model: number
-  costJson: number
+  aiModel: number
+  cost: number
   sourceReason: number
   createdAt: number
   updatedAt: number
@@ -97,7 +97,7 @@ export type CampaignPlanMinAggregateInputType = {
   version?: true
   status?: true
   idempotencyKey?: true
-  model?: true
+  aiModel?: true
   sourceReason?: true
   createdAt?: true
   updatedAt?: true
@@ -111,7 +111,7 @@ export type CampaignPlanMaxAggregateInputType = {
   version?: true
   status?: true
   idempotencyKey?: true
-  model?: true
+  aiModel?: true
   sourceReason?: true
   createdAt?: true
   updatedAt?: true
@@ -125,8 +125,8 @@ export type CampaignPlanCountAggregateInputType = {
   version?: true
   status?: true
   idempotencyKey?: true
-  model?: true
-  costJson?: true
+  aiModel?: true
+  cost?: true
   sourceReason?: true
   createdAt?: true
   updatedAt?: true
@@ -227,8 +227,8 @@ export type CampaignPlanGroupByOutputType = {
   version: number
   status: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson: runtime.JsonValue | null
+  aiModel: string
+  cost: runtime.JsonValue | null
   sourceReason: string | null
   createdAt: Date
   updatedAt: Date
@@ -265,8 +265,8 @@ export type CampaignPlanWhereInput = {
   version?: Prisma.IntFilter<"CampaignPlan"> | number
   status?: Prisma.EnumPlanStatusFilter<"CampaignPlan"> | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFilter<"CampaignPlan"> | string
-  model?: Prisma.StringFilter<"CampaignPlan"> | string
-  costJson?: Prisma.JsonNullableFilter<"CampaignPlan">
+  aiModel?: Prisma.StringFilter<"CampaignPlan"> | string
+  cost?: Prisma.JsonNullableFilter<"CampaignPlan">
   sourceReason?: Prisma.StringNullableFilter<"CampaignPlan"> | string | null
   createdAt?: Prisma.DateTimeFilter<"CampaignPlan"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CampaignPlan"> | Date | string
@@ -282,8 +282,8 @@ export type CampaignPlanOrderByWithRelationInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
-  model?: Prisma.SortOrder
-  costJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  cost?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -302,8 +302,8 @@ export type CampaignPlanWhereUniqueInput = Prisma.AtLeast<{
   campaignId?: Prisma.IntFilter<"CampaignPlan"> | number
   version?: Prisma.IntFilter<"CampaignPlan"> | number
   status?: Prisma.EnumPlanStatusFilter<"CampaignPlan"> | $Enums.PlanStatus
-  model?: Prisma.StringFilter<"CampaignPlan"> | string
-  costJson?: Prisma.JsonNullableFilter<"CampaignPlan">
+  aiModel?: Prisma.StringFilter<"CampaignPlan"> | string
+  cost?: Prisma.JsonNullableFilter<"CampaignPlan">
   sourceReason?: Prisma.StringNullableFilter<"CampaignPlan"> | string | null
   createdAt?: Prisma.DateTimeFilter<"CampaignPlan"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CampaignPlan"> | Date | string
@@ -319,8 +319,8 @@ export type CampaignPlanOrderByWithAggregationInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
-  model?: Prisma.SortOrder
-  costJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  cost?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -342,8 +342,8 @@ export type CampaignPlanScalarWhereWithAggregatesInput = {
   version?: Prisma.IntWithAggregatesFilter<"CampaignPlan"> | number
   status?: Prisma.EnumPlanStatusWithAggregatesFilter<"CampaignPlan"> | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringWithAggregatesFilter<"CampaignPlan"> | string
-  model?: Prisma.StringWithAggregatesFilter<"CampaignPlan"> | string
-  costJson?: Prisma.JsonNullableWithAggregatesFilter<"CampaignPlan">
+  aiModel?: Prisma.StringWithAggregatesFilter<"CampaignPlan"> | string
+  cost?: Prisma.JsonNullableWithAggregatesFilter<"CampaignPlan">
   sourceReason?: Prisma.StringNullableWithAggregatesFilter<"CampaignPlan"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CampaignPlan"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"CampaignPlan"> | Date | string
@@ -357,8 +357,8 @@ export type CampaignPlanCreateInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -374,8 +374,8 @@ export type CampaignPlanUncheckedCreateInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -391,8 +391,8 @@ export type CampaignPlanUpdateInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -408,8 +408,8 @@ export type CampaignPlanUncheckedUpdateInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -425,8 +425,8 @@ export type CampaignPlanCreateManyInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -440,8 +440,8 @@ export type CampaignPlanUpdateManyMutationInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -455,8 +455,8 @@ export type CampaignPlanUncheckedUpdateManyInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -475,8 +475,8 @@ export type CampaignPlanCountOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
-  model?: Prisma.SortOrder
-  costJson?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  cost?: Prisma.SortOrder
   sourceReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -495,7 +495,7 @@ export type CampaignPlanMaxOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
-  model?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
   sourceReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -509,7 +509,7 @@ export type CampaignPlanMinOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
-  model?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
   sourceReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -560,8 +560,8 @@ export type CampaignPlanCreateWithoutSectionsInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -576,8 +576,8 @@ export type CampaignPlanUncheckedCreateWithoutSectionsInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -608,8 +608,8 @@ export type CampaignPlanUpdateWithoutSectionsInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -624,8 +624,8 @@ export type CampaignPlanUncheckedUpdateWithoutSectionsInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -640,8 +640,8 @@ export type CampaignPlanCreateWithoutTasksInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -656,8 +656,8 @@ export type CampaignPlanUncheckedCreateWithoutTasksInput = {
   version: number
   status?: $Enums.PlanStatus
   idempotencyKey: string
-  model: string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel: string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -688,8 +688,8 @@ export type CampaignPlanUpdateWithoutTasksInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -704,8 +704,8 @@ export type CampaignPlanUncheckedUpdateWithoutTasksInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumPlanStatusFieldUpdateOperationsInput | $Enums.PlanStatus
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
-  model?: Prisma.StringFieldUpdateOperationsInput | string
-  costJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiModel?: Prisma.StringFieldUpdateOperationsInput | string
+  cost?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -760,8 +760,8 @@ export type CampaignPlanSelect<ExtArgs extends runtime.Types.Extensions.Internal
   version?: boolean
   status?: boolean
   idempotencyKey?: boolean
-  model?: boolean
-  costJson?: boolean
+  aiModel?: boolean
+  cost?: boolean
   sourceReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -778,8 +778,8 @@ export type CampaignPlanSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   version?: boolean
   status?: boolean
   idempotencyKey?: boolean
-  model?: boolean
-  costJson?: boolean
+  aiModel?: boolean
+  cost?: boolean
   sourceReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -793,8 +793,8 @@ export type CampaignPlanSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   version?: boolean
   status?: boolean
   idempotencyKey?: boolean
-  model?: boolean
-  costJson?: boolean
+  aiModel?: boolean
+  cost?: boolean
   sourceReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -808,8 +808,8 @@ export type CampaignPlanSelectScalar = {
   version?: boolean
   status?: boolean
   idempotencyKey?: boolean
-  model?: boolean
-  costJson?: boolean
+  aiModel?: boolean
+  cost?: boolean
   sourceReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -817,7 +817,7 @@ export type CampaignPlanSelectScalar = {
   errorMessage?: boolean
 }
 
-export type CampaignPlanOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "campaignId" | "version" | "status" | "idempotencyKey" | "model" | "costJson" | "sourceReason" | "createdAt" | "updatedAt" | "completedAt" | "errorMessage", ExtArgs["result"]["campaignPlan"]>
+export type CampaignPlanOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "campaignId" | "version" | "status" | "idempotencyKey" | "aiModel" | "cost" | "sourceReason" | "createdAt" | "updatedAt" | "completedAt" | "errorMessage", ExtArgs["result"]["campaignPlan"]>
 export type CampaignPlanInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tasks?: boolean | Prisma.CampaignPlan$tasksArgs<ExtArgs>
   sections?: boolean | Prisma.CampaignPlan$sectionsArgs<ExtArgs>
@@ -838,8 +838,11 @@ export type $CampaignPlanPayload<ExtArgs extends runtime.Types.Extensions.Intern
     version: number
     status: $Enums.PlanStatus
     idempotencyKey: string
-    model: string
-    costJson: runtime.JsonValue | null
+    aiModel: string
+    /**
+     * @immutable - Set once on creation, cannot be updated
+     */
+    cost: runtime.JsonValue | null
     sourceReason: string | null
     createdAt: Date
     updatedAt: Date
@@ -1275,8 +1278,8 @@ export interface CampaignPlanFieldRefs {
   readonly version: Prisma.FieldRef<"CampaignPlan", 'Int'>
   readonly status: Prisma.FieldRef<"CampaignPlan", 'PlanStatus'>
   readonly idempotencyKey: Prisma.FieldRef<"CampaignPlan", 'String'>
-  readonly model: Prisma.FieldRef<"CampaignPlan", 'String'>
-  readonly costJson: Prisma.FieldRef<"CampaignPlan", 'Json'>
+  readonly aiModel: Prisma.FieldRef<"CampaignPlan", 'String'>
+  readonly cost: Prisma.FieldRef<"CampaignPlan", 'Json'>
   readonly sourceReason: Prisma.FieldRef<"CampaignPlan", 'String'>
   readonly createdAt: Prisma.FieldRef<"CampaignPlan", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"CampaignPlan", 'DateTime'>

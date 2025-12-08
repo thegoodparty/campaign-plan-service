@@ -22,9 +22,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "playwright test --config=test/playwright.config.ts",
-    "test:smoke": "tsx scripts/smoke-test.ts",
-    "test:immutability": "tsx scripts/test-cost-json-immutability.ts"
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "playwright test --config=test/playwright.config.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
@@ -79,15 +78,22 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/test/integration/"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   }
 }

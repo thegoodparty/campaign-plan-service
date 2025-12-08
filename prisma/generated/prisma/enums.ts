@@ -10,31 +10,31 @@
 */
 
 export const CampaignPlanTaskType = {
-  text: 'text',
-  robocall: 'robocall',
-  doorKnocking: 'doorKnocking',
-  phoneBanking: 'phoneBanking',
-  socialMedia: 'socialMedia',
-  events: 'events',
-  education: 'education'
+  TEXT: 'TEXT',
+  ROBOCALL: 'ROBOCALL',
+  DOOR_KNOCKING: 'DOOR_KNOCKING',
+  PHONE_BANKING: 'PHONE_BANKING',
+  SOCIAL_MEDIA: 'SOCIAL_MEDIA',
+  EVENTS: 'EVENTS',
+  EDUCATION: 'EDUCATION'
 } as const
 
 export type CampaignPlanTaskType = (typeof CampaignPlanTaskType)[keyof typeof CampaignPlanTaskType]
 
 
 export const CampaignPlanTaskStatus = {
-  notStarted: 'notStarted',
-  complete: 'complete'
+  NOT_STARTED: 'NOT_STARTED',
+  COMPLETE: 'COMPLETE'
 } as const
 
 export type CampaignPlanTaskStatus = (typeof CampaignPlanTaskStatus)[keyof typeof CampaignPlanTaskStatus]
 
 
 export const PlanStatus = {
-  queued: 'queued',
-  running: 'running',
-  completed: 'completed',
-  failed: 'failed'
+  QUEUED: 'QUEUED',
+  RUNNING: 'RUNNING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
 } as const
 
 export type PlanStatus = (typeof PlanStatus)[keyof typeof PlanStatus]

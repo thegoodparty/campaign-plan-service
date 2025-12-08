@@ -23,7 +23,7 @@ model CampaignPlanTask {
     description     String
     dueDate         DateTime?               @db.Date @map("due_date")
     weekIndex       Int?                    @map("week_index")
-    status          CampaignPlanTaskStatus  @default(notStarted)
+    status          CampaignPlanTaskStatus  @default(NOT_STARTED)
     actionUrl       String?                 @map("action_url")
     priority        Int?
     tags            String[]                @default([])
