@@ -8,7 +8,7 @@
  * - Database constraints (triggers, indexes)
  */
 
-import { createPrismaClient, pool } from '../../prisma/prisma-client.js'
+import { createPrismaClient, pool } from '../../prisma/prisma-client'
 
 const prisma = createPrismaClient()
 
