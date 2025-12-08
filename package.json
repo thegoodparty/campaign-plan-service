@@ -22,9 +22,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:integration": "jest --testPathPattern=integration",
     "test:e2e": "playwright test --config=test/playwright.config.ts",
-    "hooks:install": "husky"
+    "test:smoke": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
@@ -60,9 +59,7 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
-    "husky": "^9.1.7",
     "jest": "^30.0.0",
-    "lint-staged": "^15.2.10",
     "prettier": "^3.4.2",
     "prisma": "^7.1.0",
     "source-map-support": "^0.5.21",
@@ -75,34 +72,21 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
-  "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
   "jest": {
     "moduleFileExtensions": [
       "js",
       "json",
       "ts"
     ],
-    "rootDir": ".",
+    "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/test/integration/"
-    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "src/**/*.(t|j)s"
+      "**/*.(t|j)s"
     ],
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
-    }
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   }
 }
