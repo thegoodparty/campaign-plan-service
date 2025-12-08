@@ -1,8 +1,8 @@
 enum PlanStatus {
-    queued
-    running
-    completed
-    failed
+    QUEUED
+    RUNNING
+    COMPLETED
+    FAILED
 }
 
 model CampaignPlan {
@@ -12,6 +12,7 @@ model CampaignPlan {
     status              PlanStatus  @default(queued)
     idempotencyKey      String      @unique @map("idempotency_key")
     model               String
+    /// @immutable - Set once on creation, cannot be updated
     costJson            Json?       @map("cost_json")
     sourceReason        String?     @map("source_reason")
     createdAt           DateTime    @default(now()) @db.Timestamptz(6)  @map("created_at")
