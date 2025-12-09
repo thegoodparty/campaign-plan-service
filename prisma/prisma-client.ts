@@ -9,7 +9,9 @@ export const pool = new Pool({
 
 export const adapter = new PrismaPg(pool)
 
+// Re-export PrismaClient for use in services
+export { PrismaClient }
+
 export function createPrismaClient(): PrismaClient {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   return new PrismaClient({ adapter })
 }
