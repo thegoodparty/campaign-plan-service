@@ -1,0 +1,39 @@
+enum CampaignPlanTaskType {
+    TEXT
+    ROBOCALL
+    DOOR_KNOCKING
+    PHONE_BANKING
+    SOCIAL_MEDIA
+    EVENTS
+    EDUCATION
+}
+
+enum CampaignPlanTaskStatus {
+    NOT_STARTED
+    COMPLETE
+}
+
+
+model CampaignPlanTask {
+    id              String                  @id @default(uuid(7)) @db.Uuid
+    planId          String                  @db.Uuid @map("plan_id")
+    plan            CampaignPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+    type            CampaignPlanTaskType    
+    title           String
+    description     String
+    dueDate         DateTime?               @db.Date @map("due_date")
+    weekIndex       Int?                    @map("week_index")
+    status          CampaignPlanTaskStatus  @default(NOT_STARTED)
+    actionUrl       String?                 @map("action_url")
+    priority        Int?
+    tags            String[]                @default([])
+    metadata        Json?                   @map("metadata")
+    createdAt       DateTime                @default(now()) @db.Timestamptz(6) @map("created_at")
+    updatedAt       DateTime                @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+    @@index([planId])
+    @@index([dueDate])
+    @@index([type])
+    @@index([status])
+    @@map("campaign_plan_tasks")
+}

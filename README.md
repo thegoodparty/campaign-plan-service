@@ -23,12 +23,49 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Campaign Plan Service (CPS) - A NestJS microservice for AI-powered campaign plan generation and management.
 
 ## Project setup
 
 ```bash
 $ npm install
+```
+
+### Optional: Git Hooks (ESLint on commit)
+
+Git hooks are **optional** and not installed by default. If you want ESLint to run automatically before each commit:
+
+```bash
+# 1. Initialize husky (one-time setup)
+$ npm run hooks:install
+
+# 2. Create pre-commit hook manually
+$ echo "npx lint-staged" > .husky/pre-commit
+$ chmod +x .husky/pre-commit
+```
+
+Now ESLint will run on staged files before each commit!
+
+**To bypass hooks** (if installed):
+```bash
+$ git commit --no-verify
+```
+
+### Database Setup
+
+1. Start PostgreSQL (Docker):
+```bash
+$ docker-compose up -d
+```
+
+2. Run migrations:
+```bash
+$ npm run migrate:dev
+```
+
+3. Generate Prisma Client:
+```bash
+$ npm run generate
 ```
 
 ## Compile and run the project
@@ -48,9 +85,12 @@ $ npm run start:prod
 
 ```bash
 # unit tests
-$ npm run test
+$ npm test
 
-# e2e tests
+# integration tests (requires database)
+$ npm run test:integration
+
+# e2e tests (requires running server)
 $ npm run test:e2e
 
 # test coverage

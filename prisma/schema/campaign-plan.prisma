@@ -1,0 +1,28 @@
+enum PlanStatus {
+    QUEUED
+    RUNNING
+    COMPLETED
+    FAILED
+}
+
+model CampaignPlan {
+    id                  String      @id @default(uuid(7)) @db.Uuid
+    campaignId          Int         @map("campaign_id")
+    version             Int
+    status              PlanStatus  @default(QUEUED)
+    idempotencyKey      String      @unique @map("idempotency_key")
+    aiModel             String      @map("ai_model")
+    /// @immutable - Set once on creation, cannot be updated
+    cost                Json?       @map("cost") /// [Cost]
+    sourceReason        String?     @map("source_reason")
+    createdAt           DateTime    @default(now()) @db.Timestamptz(6)  @map("created_at")
+    updatedAt           DateTime    @updatedAt      @db.Timestamptz(6)  @map("updated_at") 
+    completedAt         DateTime?                   @db.Timestamptz(6)  @map("completed_at")
+    errorMessage        String?     @map("error_message")
+    tasks               CampaignPlanTask[]
+    sections            CampaignPlanSection[]
+
+    @@index([campaignId, version(sort: Desc)])
+    @@index([campaignId, status])
+    @@map("campaign_plans")
+}

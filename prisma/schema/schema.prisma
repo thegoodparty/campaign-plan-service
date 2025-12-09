@@ -1,0 +1,13 @@
+generator client {
+  provider = "prisma-client"
+  output = "../generated/prisma"
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
