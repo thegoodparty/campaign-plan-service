@@ -1,11 +1,11 @@
 -- CreateEnum
-CREATE TYPE "CampaignPlanTaskType" AS ENUM ('text', 'robocall', 'doorKnocking', 'phoneBanking', 'socialMedia', 'events', 'education');
+CREATE TYPE "CampaignPlanTaskType" AS ENUM ('TEXT', 'ROBOCALL', 'DOOR_KNOCKING', 'PHONE_BANKING', 'SOCIAL_MEDIA', 'EVENTS', 'EDUCATION');
 
 -- CreateEnum
-CREATE TYPE "CampaignPlanTaskStatus" AS ENUM ('notStarted', 'complete');
+CREATE TYPE "CampaignPlanTaskStatus" AS ENUM ('NOT_STARTED', 'COMPLETE');
 
 -- CreateEnum
-CREATE TYPE "PlanStatus" AS ENUM ('queued', 'running', 'completed', 'failed');
+CREATE TYPE "PlanStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED');
 
 -- CreateTable
 CREATE TABLE "campaign_plan_sections" (
@@ -30,7 +30,7 @@ CREATE TABLE "campaign_plan_tasks" (
     "description" TEXT NOT NULL,
     "due_date" DATE,
     "week_index" INTEGER,
-    "status" "CampaignPlanTaskStatus" NOT NULL DEFAULT 'notStarted',
+    "status" "CampaignPlanTaskStatus" NOT NULL DEFAULT 'NOT_STARTED',
     "action_url" TEXT,
     "priority" INTEGER,
     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -46,10 +46,10 @@ CREATE TABLE "campaign_plans" (
     "id" UUID NOT NULL,
     "campaign_id" INTEGER NOT NULL,
     "version" INTEGER NOT NULL,
-    "status" "PlanStatus" NOT NULL DEFAULT 'queued',
+    "status" "PlanStatus" NOT NULL DEFAULT 'QUEUED',
     "idempotency_key" TEXT NOT NULL,
     "model" TEXT NOT NULL,
-    "cost_json" JSONB,
+    "cost" JSONB,
     "source_reason" TEXT,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(6) NOT NULL,
