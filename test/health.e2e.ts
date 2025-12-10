@@ -10,7 +10,7 @@ test.describe('Health Check (e2e)', () => {
     request,
   }) => {
     const response = await request.get('/v1/health')
-    const body = await response.json() as { status: string }
+    const body = (await response.json()) as { status: string }
     expect(body).toEqual({ status: 'ok' })
   })
 
