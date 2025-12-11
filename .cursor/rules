@@ -1,10 +1,10 @@
 ---
-description: Cursor rules for GP-API TypeScript/NestJS project. Enforce type safety, Prisma patterns, exception handling, and coding standards.
+description: Cursor rules for Campaign Plan Service TypeScript/NestJS project. Enforce type safety, Prisma patterns, exception handling, and coding standards.
 globs: ['**/*.ts', '**/*.js', '**/*.tsx', '**/*.jsx']
 alwaysApply: true
 ---
 
-# Cursor Rules for GP-API
+# Cursor Rules for CPS
 
 ## Rule 0: Type Safety
 
@@ -624,7 +624,7 @@ VERIFICATION:
 - Keep controllers focused on HTTP concerns and business logic
 - Keep services focused on data operations
 
-# E2E Testing Patterns for GP-API
+# E2E Testing Patterns for CPS
 
 ## File Organization
 

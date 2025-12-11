@@ -14,8 +14,6 @@ export const CostSchema = z.object({
   calculatedAt: z.string().optional(),
 })
 
-export type Cost = z.infer<typeof CostSchema>
-
 // Prisma JSON type declaration
 export {}
 

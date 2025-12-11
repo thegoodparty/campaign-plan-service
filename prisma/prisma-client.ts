@@ -9,6 +9,9 @@ export const pool = new Pool({
 
 export const adapter = new PrismaPg(pool)
 
-export function createPrismaClient() {
+// Re-export PrismaClient for use in services
+export { PrismaClient }
+
+export function createPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter })
 }

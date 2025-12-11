@@ -1,6 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
-import { PrismaClient } from '../../prisma/generated/prisma/client'
-import { adapter, pool } from '../../prisma/prisma-client'
+import { PrismaClient, adapter, pool } from '../../prisma/prisma-client'
 
 @Injectable()
 export class PrismaService
@@ -12,11 +11,11 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    await this.$connect()
+    await super.$connect()
   }
 
   async onModuleDestroy() {
-    await this.$disconnect()
+    await super.$disconnect()
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     await pool.end()
   }

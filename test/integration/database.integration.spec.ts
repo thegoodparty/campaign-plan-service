@@ -15,7 +15,6 @@ const prisma = createPrismaClient()
 describe('Database Integration', () => {
   afterAll(async () => {
     await prisma.$disconnect()
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     await pool.end()
   })
 
