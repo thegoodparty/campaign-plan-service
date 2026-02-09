@@ -1,0 +1,15 @@
+model CampaignPlanSection {
+    id          String          @id @default(uuid(7)) @db.Uuid
+    planId      String          @db.Uuid @map("plan_id")
+    plan        CampaignPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+    key         String
+    title       String
+    summary     String?         @db.Text @map("summary")
+    orderIndex  Int             @map("order_index")
+    createdAt   DateTime        @default(now()) @db.Timestamptz(6) @map("created_at")
+    updatedAt   DateTime        @updatedAt      @db.Timestamptz(6) @map("updated_at")
+
+    @@unique([planId, key])
+    @@index([planId, orderIndex])
+    @@map("campaign_plan_sections")
+}
