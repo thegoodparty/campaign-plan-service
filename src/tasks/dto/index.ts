@@ -1,0 +1,6 @@
+export { CreateTaskDto, createTaskSchema } from './create-task.dto'
+export type { CreateTaskInput } from './create-task.dto'
+export { UpdateTaskDto, updateTaskSchema } from './update-task.dto'
+export type { UpdateTaskInput } from './update-task.dto'
+export { PatchTaskDto, patchTaskSchema } from './patch-task.dto'
+export type { PatchTaskInput } from './patch-task.dto'
