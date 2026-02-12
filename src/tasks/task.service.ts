@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@/prisma/prisma.service'
-import { CampaignPlanTask } from '@prisma-generated/client'
+import type { CampaignPlanTask } from '@prisma-generated/client'
 
 @Injectable()
 export class TaskService {
