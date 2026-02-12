@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from '@/app.module'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter'
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -33,6 +34,7 @@ const bootstrap = async () => {
 
   app.setGlobalPrefix('v1')
   app.useGlobalPipes(new ZodValidationPipe())
+  app.useGlobalFilters(new AllExceptionsFilter())
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Campaign Plan Service')
