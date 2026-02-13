@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "test:integration": "vitest run --testPathPattern=integration",
+    "test:integration": "vitest run test/integration",
     "test:e2e": "playwright test --config=test/playwright.config.ts",
     "hooks:install": "husky"
   },
