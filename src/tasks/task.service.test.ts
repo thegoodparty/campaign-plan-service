@@ -191,18 +191,7 @@ describe('TaskService', () => {
       expect(result).toEqual(updatedTask)
       expect(prisma.campaignPlanTask.update).toHaveBeenCalledWith({
         where: { id: mockTask.id },
-        data: {
-          type: 'PHONE_BANKING',
-          title: 'Updated task',
-          description: 'Updated description',
-          dueDate: null,
-          weekIndex: null,
-          status: 'NOT_STARTED',
-          actionUrl: null,
-          priority: null,
-          tags: [],
-          metadata: null,
-        },
+        data: updateDto,
       })
     })
 
