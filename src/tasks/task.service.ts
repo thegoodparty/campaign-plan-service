@@ -1,14 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@/prisma/prisma.service'
-import { CampaignPlanTask } from '@prisma-generated/client'
+import type { CampaignPlanTask } from '@prisma-generated/client'
 import type { CreateTaskInput } from './dto/create-task.dto'
 import type { UpdateTaskInput } from './dto/update-task.dto'
 import type { PatchTaskInput } from './dto/patch-task.dto'
 
 @Injectable()
 export class TaskService {
-  private readonly logger = new Logger(TaskService.name)
-
   constructor(private readonly prisma: PrismaService) {}
 
   async findAllByPlanId(planId: string): Promise<CampaignPlanTask[]> {

@@ -8,6 +8,7 @@
  * - Database constraints (triggers, indexes)
  */
 
+import { describe, it, expect, afterAll } from 'vitest'
 import { createPrismaClient, pool } from '../../prisma/prisma-client'
 
 const prisma = createPrismaClient()

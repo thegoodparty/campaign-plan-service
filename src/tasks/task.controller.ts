@@ -9,6 +9,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common'
 import { TaskService } from './task.service'
 import { CreateTaskDto } from './dto/create-task.dto'
@@ -20,16 +21,18 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  async findAll(@Param('planId') planId: string) {
+  async findAll(
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
+  ) {
     return this.taskService.findAllByPlanId(planId)
   }
 
   @Get(':taskId')
   async findOne(
-    @Param('planId') planId: string,
-    @Param('taskId') taskId: string,
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
+    @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
   ) {
-    return this.taskService.findOne(planId, taskId)
+    return this.taskService.remove(planId, taskId)
   }
 
   @Post()

@@ -8,6 +8,8 @@
     "e2e-tests",
     "prisma/generated",
     "**/*spec.ts",
-    "**/*.e2e.ts"
+    "**/*.test.ts",
+    "**/*.e2e.ts",
+    "vitest.config.ts"
   ]
 }

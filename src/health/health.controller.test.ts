@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { HealthController } from './health.controller'
 import { HealthService } from './health.service'
 import { PrismaService } from '@/prisma/prisma.service'
@@ -15,7 +16,7 @@ describe('HealthController', () => {
         {
           provide: PrismaService,
           useValue: {
-            $queryRaw: jest.fn(),
+            $queryRaw: vi.fn(),
           },
         },
       ],
@@ -31,17 +32,17 @@ describe('HealthController', () => {
 
   describe('checkHealth', () => {
     it('should return status ok', async () => {
-      jest
-        .spyOn(prismaService, '$queryRaw')
-        .mockResolvedValue([{ '?column?': 1 }])
+      vi.spyOn(prismaService, '$queryRaw').mockResolvedValue([
+        { '?column?': 1 },
+      ])
       const result = await controller.checkHealth()
       expect(result).toEqual({ status: 'ok' })
     })
 
     it('should return 200 OK with expected format', async () => {
-      jest
-        .spyOn(prismaService, '$queryRaw')
-        .mockResolvedValue([{ '?column?': 1 }])
+      vi.spyOn(prismaService, '$queryRaw').mockResolvedValue([
+        { '?column?': 1 },
+      ])
       const result = await controller.checkHealth()
       expect(result).toHaveProperty('status')
       expect(result.status).toBe('ok')
