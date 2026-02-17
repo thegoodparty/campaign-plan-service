@@ -64,18 +64,7 @@ export class TaskService {
 
     return this.prisma.campaignPlanTask.update({
       where: { id: taskId },
-      data: {
-        type: data.type,
-        title: data.title,
-        description: data.description,
-        dueDate: data.dueDate ?? null,
-        weekIndex: data.weekIndex ?? null,
-        status: data.status ?? 'NOT_STARTED',
-        actionUrl: data.actionUrl ?? null,
-        priority: data.priority ?? null,
-        tags: data.tags ?? [],
-        metadata: data.metadata ?? null,
-      },
+      data,
     })
   }
 
