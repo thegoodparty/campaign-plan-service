@@ -32,13 +32,13 @@ export class TaskController {
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
   ) {
-    return this.taskService.remove(planId, taskId)
+    return this.taskService.findOne(planId, taskId)
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Param('planId') planId: string,
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Body() createTaskDto: CreateTaskDto,
   ) {
     return this.taskService.create(planId, createTaskDto)
@@ -46,8 +46,8 @@ export class TaskController {
 
   @Put(':taskId')
   async update(
-    @Param('planId') planId: string,
-    @Param('taskId') taskId: string,
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
+    @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
     return this.taskService.update(planId, taskId, updateTaskDto)
@@ -55,8 +55,8 @@ export class TaskController {
 
   @Patch(':taskId')
   async patch(
-    @Param('planId') planId: string,
-    @Param('taskId') taskId: string,
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
+    @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
     @Body() patchTaskDto: PatchTaskDto,
   ) {
     return this.taskService.patch(planId, taskId, patchTaskDto)
@@ -65,8 +65,8 @@ export class TaskController {
   @Delete(':taskId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
-    @Param('planId') planId: string,
-    @Param('taskId') taskId: string,
+    @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
+    @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
   ) {
     await this.taskService.remove(planId, taskId)
   }
