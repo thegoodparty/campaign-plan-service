@@ -8,6 +8,7 @@ export default [
   {
     ignores: [
       'eslint.config.mjs',
+      'prisma/generated/**',
       'prisma/schema/jsontypes/**/*.d.ts',
       'prisma/json-types/**/*.d.ts',
     ],
@@ -23,7 +24,9 @@ export default [
       },
       sourceType: 'module',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['vitest.config.ts'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -62,13 +65,14 @@ export default [
     },
   },
   {
-    files: ['test/**/*.ts', '**/*.spec.ts'],
+    files: ['test/**/*.ts', '**/*.spec.ts', '**/*.test.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 ];
