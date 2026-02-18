@@ -17,7 +17,11 @@ export const createTaskSchema = z.object({
   type: CampaignPlanTaskTypeEnum,
   title: z.string().min(1),
   description: z.string().min(1),
-  dueDate: z.coerce.date().nullable().optional(),
+  dueDate: z.iso
+    .datetime()
+    .transform((s) => new Date(s))
+    .nullable()
+    .optional(),
   weekIndex: z.number().int().nullable().optional(),
   status: CampaignPlanTaskStatusEnum.optional().default('NOT_STARTED'),
   actionUrl: z.string().url().nullable().optional(),
