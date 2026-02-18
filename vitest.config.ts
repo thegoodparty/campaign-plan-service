@@ -22,7 +22,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'json'],
     },
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'test/**/*.{test,spec}.ts'],
     env: dotenv.parse(
       readFileSync(fileURLToPath(new URL('./.env.test', import.meta.url))),
     ),
