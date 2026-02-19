@@ -11,6 +11,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common'
+import type { CampaignPlanTask } from '@prisma-generated/client'
 import { TaskService } from './task.service'
 import { CreateTaskDto } from './dto/create-task.dto'
 import { UpdateTaskDto } from './dto/update-task.dto'
@@ -23,7 +24,7 @@ export class TaskController {
   @Get()
   async findAll(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
-  ) {
+  ): Promise<CampaignPlanTask[]> {
     return this.taskService.findAllByPlanId(planId)
   }
 
@@ -31,7 +32,7 @@ export class TaskController {
   async findOne(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
-  ) {
+  ): Promise<CampaignPlanTask> {
     return this.taskService.findOne(planId, taskId)
   }
 
@@ -40,7 +41,7 @@ export class TaskController {
   async create(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Body() createTaskDto: CreateTaskDto,
-  ) {
+  ): Promise<CampaignPlanTask> {
     return this.taskService.create(planId, createTaskDto)
   }
 
@@ -49,7 +50,7 @@ export class TaskController {
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
     @Body() updateTaskDto: UpdateTaskDto,
-  ) {
+  ): Promise<CampaignPlanTask> {
     return this.taskService.update(planId, taskId, updateTaskDto)
   }
 
@@ -58,8 +59,8 @@ export class TaskController {
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
     @Body() patchTaskDto: PatchTaskDto,
-  ) {
-    return this.taskService.patch(planId, taskId, patchTaskDto)
+  ): Promise<CampaignPlanTask> {
+    return this.taskService.update(planId, taskId, patchTaskDto)
   }
 
   @Delete(':taskId')

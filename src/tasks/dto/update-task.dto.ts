@@ -1,25 +1,17 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-
-const CampaignPlanTaskTypeEnum = z.enum([
-  'TEXT',
-  'ROBOCALL',
-  'DOOR_KNOCKING',
-  'PHONE_BANKING',
-  'SOCIAL_MEDIA',
-  'EVENTS',
-  'EDUCATION',
-])
-
-const CampaignPlanTaskStatusEnum = z.enum(['NOT_STARTED', 'COMPLETE'])
+import {
+  CampaignPlanTaskType,
+  CampaignPlanTaskStatus,
+} from '@prisma-generated/client'
 
 export const updateTaskSchema = z.object({
-  type: CampaignPlanTaskTypeEnum,
+  type: z.enum(CampaignPlanTaskType),
   title: z.string().min(1),
   description: z.string().min(1),
   dueDate: z.coerce.date().nullable(),
   weekIndex: z.number().int().nullable(),
-  status: CampaignPlanTaskStatusEnum,
+  status: z.enum(CampaignPlanTaskStatus),
   actionUrl: z.string().url().nullable(),
   priority: z.number().int().nullable(),
   tags: z.array(z.string()),

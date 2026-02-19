@@ -39,7 +39,7 @@ describe('TaskService', () => {
             },
             campaignPlanTask: {
               findMany: vi.fn(),
-              findFirst: vi.fn(),
+              findUnique: vi.fn(),
               create: vi.fn(),
               update: vi.fn(),
               delete: vi.fn(),
@@ -99,19 +99,19 @@ describe('TaskService', () => {
 
   describe('findOne', () => {
     it('should return a task when it exists for the plan', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         mockTask as never,
       )
 
       const result = await service.findOne(mockPlan.id, mockTask.id)
       expect(result).toEqual(mockTask)
-      expect(prisma.campaignPlanTask.findFirst).toHaveBeenCalledWith({
-        where: { id: mockTask.id, planId: mockPlan.id },
+      expect(prisma.campaignPlanTask.findUnique).toHaveBeenCalledWith({
+        where: { id: mockTask.id },
       })
     })
 
     it('should throw NotFoundException when task does not exist', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         null as never,
       )
 
@@ -184,7 +184,7 @@ describe('TaskService', () => {
     }
 
     it('should update a task when it exists', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         mockTask as never,
       )
       const updatedTask = { ...mockTask, ...updateDto }
@@ -201,7 +201,7 @@ describe('TaskService', () => {
     })
 
     it('should throw NotFoundException when task does not exist', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         null as never,
       )
 
@@ -211,9 +211,9 @@ describe('TaskService', () => {
     })
   })
 
-  describe('patch', () => {
+  describe('update (partial)', () => {
     it('should partially update a task', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         mockTask as never,
       )
       const patchedTask = { ...mockTask, title: 'Patched title' }
@@ -221,7 +221,7 @@ describe('TaskService', () => {
         patchedTask as never,
       )
 
-      const result = await service.patch(mockPlan.id, mockTask.id, {
+      const result = await service.update(mockPlan.id, mockTask.id, {
         title: 'Patched title',
       })
       expect(result).toEqual(patchedTask)
@@ -232,19 +232,19 @@ describe('TaskService', () => {
     })
 
     it('should throw NotFoundException when task does not exist', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         null as never,
       )
 
       await expect(
-        service.patch(mockPlan.id, 'nonexistent', { title: 'X' }),
+        service.update(mockPlan.id, 'nonexistent', { title: 'X' }),
       ).rejects.toThrow(NotFoundException)
     })
   })
 
   describe('remove', () => {
     it('should delete a task when it exists', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         mockTask as never,
       )
       vi.spyOn(prisma.campaignPlanTask, 'delete').mockResolvedValue(
@@ -258,7 +258,7 @@ describe('TaskService', () => {
     })
 
     it('should throw NotFoundException when task does not exist', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         null as never,
       )
 
@@ -268,7 +268,7 @@ describe('TaskService', () => {
     })
 
     it('should propagate database errors', async () => {
-      vi.spyOn(prisma.campaignPlanTask, 'findFirst').mockResolvedValue(
+      vi.spyOn(prisma.campaignPlanTask, 'findUnique').mockResolvedValue(
         mockTask as never,
       )
       vi.spyOn(prisma.campaignPlanTask, 'delete').mockRejectedValue(
