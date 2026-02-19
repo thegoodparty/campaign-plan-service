@@ -36,7 +36,6 @@ describe('TaskController', () => {
             findOne: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
-            patch: vi.fn(),
             remove: vi.fn(),
           },
         },
@@ -176,13 +175,13 @@ describe('TaskController', () => {
   describe('patch', () => {
     it('should partially update and return the task', async () => {
       const patchedTask = { ...mockTask, title: 'Patched title' }
-      vi.spyOn(taskService, 'patch').mockResolvedValue(patchedTask as never)
+      vi.spyOn(taskService, 'update').mockResolvedValue(patchedTask as never)
 
       const result = await controller.patch(mockTask.planId, mockTask.id, {
         title: 'Patched title',
       })
       expect(result).toEqual(patchedTask)
-      expect(taskService.patch).toHaveBeenCalledWith(
+      expect(taskService.update).toHaveBeenCalledWith(
         mockTask.planId,
         mockTask.id,
         { title: 'Patched title' },
@@ -190,7 +189,7 @@ describe('TaskController', () => {
     })
 
     it('should propagate NotFoundException from service', async () => {
-      vi.spyOn(taskService, 'patch').mockRejectedValue(new NotFoundException())
+      vi.spyOn(taskService, 'update').mockRejectedValue(new NotFoundException())
 
       await expect(
         controller.patch(mockTask.planId, 'nonexistent', { title: 'X' }),
