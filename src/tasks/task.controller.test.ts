@@ -138,8 +138,13 @@ describe('TaskController', () => {
       type: 'PHONE_BANKING' as const,
       title: 'Updated task',
       description: 'Updated description',
+      dueDate: null,
+      weekIndex: null,
       status: 'NOT_STARTED' as const,
+      actionUrl: null,
+      priority: null,
       tags: [] as string[],
+      metadata: null,
     }
 
     it('should update and return the task', async () => {
