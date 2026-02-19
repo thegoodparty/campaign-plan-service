@@ -34,6 +34,9 @@ describe('TaskController', () => {
           useValue: {
             findAllByPlanId: vi.fn(),
             findOne: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            remove: vi.fn(),
           },
         },
       ],
@@ -95,6 +98,122 @@ describe('TaskController', () => {
 
       await expect(
         controller.findOne(mockTask.planId, 'nonexistent-task'),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('create', () => {
+    const createDto = {
+      type: 'DOOR_KNOCKING' as const,
+      title: 'New task',
+      description: 'Task description',
+      status: 'NOT_STARTED' as const,
+      tags: [] as string[],
+    }
+
+    it('should create and return a task', async () => {
+      const createdTask = { ...mockTask, ...createDto }
+      vi.spyOn(taskService, 'create').mockResolvedValue(createdTask as never)
+
+      const result = await controller.create(mockTask.planId, createDto)
+      expect(result).toEqual(createdTask)
+      expect(taskService.create).toHaveBeenCalledWith(
+        mockTask.planId,
+        createDto,
+      )
+    })
+
+    it('should propagate NotFoundException from service', async () => {
+      vi.spyOn(taskService, 'create').mockRejectedValue(new NotFoundException())
+
+      await expect(
+        controller.create('nonexistent-id', createDto),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('update', () => {
+    const updateDto = {
+      type: 'PHONE_BANKING' as const,
+      title: 'Updated task',
+      description: 'Updated description',
+      dueDate: null,
+      weekIndex: null,
+      status: 'NOT_STARTED' as const,
+      actionUrl: null,
+      priority: null,
+      tags: [] as string[],
+      metadata: null,
+    }
+
+    it('should update and return the task', async () => {
+      const updatedTask = { ...mockTask, ...updateDto }
+      vi.spyOn(taskService, 'update').mockResolvedValue(updatedTask as never)
+
+      const result = await controller.update(
+        mockTask.planId,
+        mockTask.id,
+        updateDto,
+      )
+      expect(result).toEqual(updatedTask)
+      expect(taskService.update).toHaveBeenCalledWith(
+        mockTask.planId,
+        mockTask.id,
+        updateDto,
+      )
+    })
+
+    it('should propagate NotFoundException from service', async () => {
+      vi.spyOn(taskService, 'update').mockRejectedValue(new NotFoundException())
+
+      await expect(
+        controller.update(mockTask.planId, 'nonexistent', updateDto),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('patch', () => {
+    it('should partially update and return the task', async () => {
+      const patchedTask = { ...mockTask, title: 'Patched title' }
+      vi.spyOn(taskService, 'update').mockResolvedValue(patchedTask as never)
+
+      const result = await controller.patch(mockTask.planId, mockTask.id, {
+        title: 'Patched title',
+      })
+      expect(result).toEqual(patchedTask)
+      expect(taskService.update).toHaveBeenCalledWith(
+        mockTask.planId,
+        mockTask.id,
+        { title: 'Patched title' },
+      )
+    })
+
+    it('should propagate NotFoundException from service', async () => {
+      vi.spyOn(taskService, 'update').mockRejectedValue(new NotFoundException())
+
+      await expect(
+        controller.patch(mockTask.planId, 'nonexistent', { title: 'X' }),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('remove', () => {
+    it('should call service.remove and return void', async () => {
+      vi.spyOn(taskService, 'remove').mockResolvedValue(undefined as never)
+
+      const result = await controller.remove(mockTask.planId, mockTask.id)
+      expect(result).toBeUndefined()
+      expect(taskService.remove).toHaveBeenCalledWith(
+        mockTask.planId,
+        mockTask.id,
+      )
+    })
+
+    it('should propagate NotFoundException from service', async () => {
+      vi.spyOn(taskService, 'remove').mockRejectedValue(new NotFoundException())
+
+      await expect(
+        controller.remove(mockTask.planId, 'nonexistent'),
       ).rejects.toThrow(NotFoundException)
     })
   })
