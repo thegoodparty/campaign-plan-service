@@ -1,0 +1,3 @@
+name: campaign-plan-service
+runtime: nodejs
+description: A Pulumi program for deploying the campaign plan service.
