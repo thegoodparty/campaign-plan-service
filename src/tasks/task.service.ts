@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@/prisma/prisma.service'
 import type { CampaignPlanTask } from '@prisma-generated/client'
 import type { CreateTaskInput } from './dto/create-task.dto'
-import type { UpdateTaskInput } from './dto/update-task.dto'
 import type { PatchTaskInput } from './dto/patch-task.dto'
 
 @Injectable()
@@ -26,11 +25,11 @@ export class TaskService {
   }
 
   async findOne(planId: string, taskId: string): Promise<CampaignPlanTask> {
-    const task = await this.prisma.campaignPlanTask.findFirst({
-      where: { id: taskId, planId },
+    const task = await this.prisma.campaignPlanTask.findUnique({
+      where: { id: taskId },
     })
 
-    if (!task) {
+    if (!task || task.planId !== planId) {
       throw new NotFoundException(`Task ${taskId} not found for plan ${planId}`)
     }
 
@@ -56,30 +55,6 @@ export class TaskService {
   }
 
   async update(
-    planId: string,
-    taskId: string,
-    data: UpdateTaskInput,
-  ): Promise<CampaignPlanTask> {
-    await this.findOne(planId, taskId)
-
-    return this.prisma.campaignPlanTask.update({
-      where: { id: taskId },
-      data: {
-        type: data.type,
-        title: data.title,
-        description: data.description,
-        dueDate: data.dueDate ?? null,
-        weekIndex: data.weekIndex ?? null,
-        status: data.status ?? 'NOT_STARTED',
-        actionUrl: data.actionUrl ?? null,
-        priority: data.priority ?? null,
-        tags: data.tags ?? [],
-        metadata: data.metadata ?? null,
-      },
-    })
-  }
-
-  async patch(
     planId: string,
     taskId: string,
     data: PatchTaskInput,
