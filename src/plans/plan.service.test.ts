@@ -5,7 +5,7 @@ import { PlanService } from './plan.service'
 import { PrismaService } from '@/prisma/prisma.service'
 
 const mockPlan = {
-  id: '01961234-5678-7abc-def0-123456789abc',
+  id: '01961234-5678-7abc-8ef0-123456789abc',
   campaignId: 42,
   version: 1,
   status: 'QUEUED',
@@ -64,9 +64,11 @@ describe('PlanService', () => {
       expect(result).toEqual({ planId: mockPlan.id, status: 'QUEUED' })
       expect(prisma.campaignPlan.findUnique).toHaveBeenCalledWith({
         where: { idempotencyKey: '42:1' },
+        select: { id: true, status: true },
       })
       expect(prisma.campaignPlan.create).toHaveBeenCalledWith({
         data: { ...createDto, idempotencyKey: '42:1' },
+        select: { id: true, status: true },
       })
     })
 

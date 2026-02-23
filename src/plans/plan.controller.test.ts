@@ -11,12 +11,12 @@ import { PlanController } from './plan.controller'
 import { PlanService } from './plan.service'
 
 const mockPlanResponse = {
-  planId: '01961234-5678-7abc-def0-123456789abc',
+  planId: '01961234-5678-7abc-8ef0-123456789abc',
   status: 'QUEUED',
 }
 
 const mockPlanFull = {
-  id: '01961234-5678-7abc-def0-123456789abc',
+  id: '01961234-5678-7abc-8ef0-123456789abc',
   campaignId: 42,
   version: 1,
   status: 'QUEUED',
@@ -162,10 +162,7 @@ describe('PlanController (HTTP)', () => {
 
   describe('POST /v1/plans', () => {
     it('should return 202 with { planId, status }', async () => {
-      mockService.create.mockResolvedValue({
-        planId: '01961234-5678-7abc-def0-123456789abc',
-        status: 'QUEUED',
-      })
+      mockService.create.mockResolvedValue(mockPlanResponse)
 
       const res = await app.inject({
         method: 'POST',
@@ -174,11 +171,7 @@ describe('PlanController (HTTP)', () => {
       })
 
       expect(res.statusCode).toBe(202)
-      const body = res.json()
-      expect(body).toEqual({
-        planId: '01961234-5678-7abc-def0-123456789abc',
-        status: 'QUEUED',
-      })
+      expect(res.json()).toEqual(mockPlanResponse)
     })
 
     it('should return 400 with structured error on invalid body', async () => {
@@ -217,7 +210,7 @@ describe('PlanController (HTTP)', () => {
   })
 
   describe('GET /v1/plans/:planId', () => {
-    const validId = '01961234-5678-7abc-def0-123456789abc'
+    const validId = '01961234-5678-7abc-8ef0-123456789abc'
 
     it('should return 200 with plan data', async () => {
       const plan = {
@@ -275,7 +268,7 @@ describe('PlanController (HTTP)', () => {
   })
 
   describe('DELETE /v1/plans/:planId', () => {
-    const validId = '01961234-5678-7abc-def0-123456789abc'
+    const validId = '01961234-5678-7abc-8ef0-123456789abc'
 
     it('should return 204 on success', async () => {
       mockService.remove.mockResolvedValue(undefined)
