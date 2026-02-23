@@ -1,0 +1,23 @@
+config:
+  aws:region: us-west-2
+
+  campaign-plan:vpcId: "vpc-xxxxxxxx"
+  campaign-plan:privateSubnetIds:
+    - "subnet-aaaa"
+    - "subnet-bbbb"
+  campaign-plan:privateRouteTableIds:
+    - "rtb-1111"
+    - "rtb-2222"
+
+  # Network policy
+  campaign-plan:apiSecurityGroupId: "sg-api-xxxx"
+  campaign-plan:dbSecurityGroupId: "sg-db-xxxx"
+
+  # Secrets Manager secret ARN containing either individual values or JSON you map
+  campaign-plan:dbPasswordSecretArn: "arn:aws:secretsmanager:...:secret:..."
+  campaign-plan:dbUserSecretArn: "arn:aws:secretsmanager:...:secret:..."
+  campaign-plan:dbHostSecretArn: "arn:aws:secretsmanager:...:secret:..."
+  campaign-plan:dbNameSecretArn: "arn:aws:secretsmanager:...:secret:..."
+
+  # Image
+  campaign-plan:imageTag: "dev"
