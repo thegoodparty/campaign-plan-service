@@ -1,250 +1,326 @@
-import * as pulumi from '@pulumi/pulumi'
 import * as aws from '@pulumi/aws'
+import * as pulumi from '@pulumi/pulumi'
 
-const cfg = new pulumi.Config('campaign-plan')
+export = () => {
+  const config = new pulumi.Config()
 
-const vpcId = cfg.require('vpcId')
-const privateSubnetIds = cfg.requireObject<string[]>('privateSubnetIds')
-const privateRouteTableIds = cfg.requireObject<string[]>('privateRouteTableIds')
-const dbSecurityGroupId = cfg.require('dbSecurityGroupId')
+  /**
+   * Middle ground approach:
+   * - Only deploy dev/qa/prod TODAY (no preview stacks required)
+   * - Keep the code structured so adding preview later is easy:
+   *   - keep `select()` helper
+   *   - keep `stage` naming
+   */
 
-const dbHostSecretArn = cfg.require('dbHostSecretArn')
-const dbUserSecretArn = cfg.require('dbUserSecretArn')
-const dbPasswordSecretArn = cfg.require('dbPasswordSecretArn')
-const dbNameSecretArn = cfg.require('dbNameSecretArn')
+  const rawEnvironment = config.require('environment')
 
-const imageTag = cfg.get('imageTag') ?? 'dev'
+  type Environment = 'dev' | 'qa' | 'prod'
 
-// ---------- Queues ----------
-const jobsQueue = new aws.sqs.Queue('campaign-plan-jobs', {
-  // sensible defaults; tune later
-  visibilityTimeoutSeconds: 300, // should exceed typical job processing time per message
-  messageRetentionSeconds: 60 * 60 * 24 * 4, // 4 days
-})
+  function isEnvironment(value: string): value is Environment {
+    return value === 'dev' || value === 'qa' || value === 'prod'
+  }
 
-const completedQueue = new aws.sqs.Queue('campaign-plan-completed', {
-  messageRetentionSeconds: 60 * 60 * 24 * 4,
-})
+  if (!isEnvironment(rawEnvironment)) {
+    throw new Error(`Invalid environment: ${rawEnvironment}`)
+  }
 
-// (Optional but recommended) DLQ for failed jobs
-const jobsDlq = new aws.sqs.Queue('campaign-plan-jobs-dlq', {
-  messageRetentionSeconds: 60 * 60 * 24 * 14,
-})
+  const environment: Environment = rawEnvironment
+  const stage = environment
+  const imageUri = config.require('imageUri')
 
-new aws.sqs.RedrivePolicy('campaign-plan-jobs-redrive', {
-  queueUrl: jobsQueue.url,
-  redrivePolicy: pulumi.interpolate`{"deadLetterTargetArn":"${jobsDlq.arn}","maxReceiveCount":5}`,
-})
-// ---------- Security groups ----------
-const serviceSg = new aws.ec2.SecurityGroup('campaign-plan-worker-sg', {
-  vpcId,
-  description: 'Campaign plan ECS worker SG',
-  egress: [
-    { protocol: '-1', fromPort: 0, toPort: 0, cidrBlocks: ['0.0.0.0/0'] },
-  ],
-})
+  const select = <T>(values: Record<Environment, T>): T => {
+    return values[environment]
+  }
 
-// Allow DB SG to accept connections from worker
-new aws.ec2.SecurityGroupRule('allow-db-from-worker', {
-  type: 'ingress',
-  securityGroupId: dbSecurityGroupId,
-  fromPort: 5432,
-  toPort: 5432,
-  protocol: 'tcp',
-  sourceSecurityGroupId: serviceSg.id,
-})
+  // ---- Shared VPC (copied from GP API pattern; update if needed) ----
+  const vpcId = 'vpc-0763fa52c32ebcf6a'
+  const vpcCidr = '10.0.0.0/16'
 
-// Endpoint SG: allow HTTPS from worker to interface endpoints
-const endpointSg = new aws.ec2.SecurityGroup('vpce-sg', {
-  vpcId,
-  description: 'Allow ECS tasks to hit VPC interface endpoints',
-  ingress: [
-    {
-      protocol: 'tcp',
-      fromPort: 443,
-      toPort: 443,
-      securityGroups: [serviceSg.id],
-    },
-  ],
-  egress: [
-    { protocol: '-1', fromPort: 0, toPort: 0, cidrBlocks: ['0.0.0.0/0'] },
-  ],
-})
+  const vpcSubnetIds = {
+    public: ['subnet-07984b965dabfdedc', 'subnet-01c540e6428cdd8db'],
+    private: ['subnet-053357b931f0524d4', 'subnet-0bb591861f72dcb7f'],
+  }
 
-// ---------- VPC endpoints (no NAT) ----------
-const region = aws.config.region!
+  // Base SG(s) used by ECS tasks in this VPC (GP API uses this).
+  // You can replace this with a dedicated SG later.
+  const vpcSecurityGroupIds = ['sg-01de8d67b0f0ec787']
 
-const interfaceServices = [
-  `com.amazonaws.${region}.ecr.api`,
-  `com.amazonaws.${region}.ecr.dkr`,
-  `com.amazonaws.${region}.logs`,
-  `com.amazonaws.${region}.secretsmanager`,
-  `com.amazonaws.${region}.kms`,
-  `com.amazonaws.${region}.sts`,
-  `com.amazonaws.${region}.sqs`,
-]
+  // ---- DB password (set via pulumi config as a secret) ----
+  // Example: pulumi config set --secret dbPassword "..."
+  const dbPassword = pulumi.secret(config.require('dbPassword'))
 
-for (const svc of interfaceServices) {
-  const name = svc.replace(`com.amazonaws.${region}.`, '').replace(/\./g, '-')
-  new aws.ec2.VpcEndpoint(`vpce-${name}`, {
-    vpcId,
-    serviceName: svc,
-    vpcEndpointType: 'Interface',
-    privateDnsEnabled: true,
-    subnetIds: privateSubnetIds,
-    securityGroupIds: [endpointSg.id],
+  // ---- SQS: jobs + completed + DLQ (FIFO) ----
+  const dlq = new aws.sqs.Queue('campaign-plan-dlq', {
+    name: `${stage}-CampaignPlan-DLQ.fifo`,
+    fifoQueue: true,
+    messageRetentionSeconds: 7 * 24 * 60 * 60, // 7 days
   })
-}
 
-// S3 gateway endpoint (needed for ECR pulls without NAT)
-new aws.ec2.VpcEndpoint('vpce-s3', {
-  vpcId,
-  serviceName: `com.amazonaws.${region}.s3`,
-  vpcEndpointType: 'Gateway',
-  routeTableIds: privateRouteTableIds,
-})
+  const jobsQueue = new aws.sqs.Queue('campaign-plan-jobs', {
+    name: `${stage}-CampaignPlan-Jobs.fifo`,
+    fifoQueue: true,
+    visibilityTimeoutSeconds: 300, // 5 minutes; tune to max job time
+    messageRetentionSeconds: 7 * 24 * 60 * 60, // 7 days
+    deduplicationScope: 'messageGroup',
+    fifoThroughputLimit: 'perMessageGroupId',
+    redrivePolicy: pulumi.jsonStringify({
+      deadLetterTargetArn: dlq.arn,
+      maxReceiveCount: 3,
+    }),
+  })
 
-// ---------- ECR ----------
-const repo = new aws.ecr.Repository('campaign-plan-repo', {
-  forceDelete: true, // dev convenience; remove for prod
-})
+  const completedQueue = new aws.sqs.Queue('campaign-plan-completed', {
+    name: `${stage}-CampaignPlan-Completed.fifo`,
+    fifoQueue: true,
+    messageRetentionSeconds: 7 * 24 * 60 * 60, // 7 days
+    deduplicationScope: 'messageGroup',
+    fifoThroughputLimit: 'perMessageGroupId',
+  })
 
-// ---------- Logs ----------
-const logGroup = new aws.cloudwatch.LogGroup('campaign-plan-logs', {
-  retentionInDays: 14,
-})
+  // ---- Aurora Postgres Serverless v2 (dedicated DB) ----
+  const dbName = 'campaign_plan'
+  const dbUser = 'campaign_plan'
 
-// ---------- IAM Roles ----------
-const execRole = new aws.iam.Role('task-exec-role', {
-  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-    Service: 'ecs-tasks.amazonaws.com',
-  }),
-})
+  const rdsSecurityGroup = new aws.ec2.SecurityGroup('campaign-plan-rds-sg', {
+    name: `campaign-plan-${stage}-rds-sg`,
+    description: 'Allow campaign-plan worker to reach its DB',
+    vpcId,
+    ingress: [
+      // Allow from base task SGs (used by the worker task, or swapped later)
+      {
+        protocol: 'tcp',
+        fromPort: 5432,
+        toPort: 5432,
+        securityGroups: vpcSecurityGroupIds,
+      },
+      // Optional: allow within VPC CIDR (remove if you want strict SG-only)
+      {
+        protocol: 'tcp',
+        fromPort: 5432,
+        toPort: 5432,
+        cidrBlocks: [vpcCidr],
+      },
+    ],
+    egress: [
+      { protocol: '-1', fromPort: 0, toPort: 0, cidrBlocks: ['0.0.0.0/0'] },
+    ],
+  })
 
-new aws.iam.RolePolicyAttachment('execRolePolicy', {
-  role: execRole.name,
-  policyArn: aws.iam.ManagedPolicy.AmazonECSTaskExecutionRolePolicy,
-})
+  const subnetGroup = new aws.rds.SubnetGroup('campaign-plan-db-subnet-group', {
+    name: `campaign-plan-${stage}-db-subnet-group`,
+    subnetIds: vpcSubnetIds.private,
+    tags: { Name: `campaign-plan-${stage}-db-subnet-group` },
+  })
 
-const taskRole = new aws.iam.Role('task-role', {
-  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-    Service: 'ecs-tasks.amazonaws.com',
-  }),
-})
+  const dbCluster = new aws.rds.Cluster('campaign-plan-db-cluster', {
+    clusterIdentifier: select({
+      dev: 'campaign-plan-db-dev',
+      qa: 'campaign-plan-db-qa',
+      prod: 'campaign-plan-db-prod',
+    }),
+    engine: aws.rds.EngineType.AuroraPostgresql,
+    engineMode: aws.rds.EngineMode.Provisioned,
+    engineVersion: '16.8',
+    databaseName: dbName,
+    masterUsername: dbUser,
+    masterPassword: dbPassword,
+    dbSubnetGroupName: subnetGroup.name,
+    vpcSecurityGroupIds: [rdsSecurityGroup.id],
+    storageEncrypted: true,
+    serverlessv2ScalingConfiguration: {
+      minCapacity: environment === 'prod' ? 1 : 0.5,
+      maxCapacity: 64,
+    },
+    backupRetentionPeriod: select({ dev: 7, qa: 7, prod: 14 }),
+    deletionProtection: environment === 'prod',
+    skipFinalSnapshot: environment !== 'prod',
+    finalSnapshotIdentifier:
+      environment === 'prod'
+        ? `campaign-plan-db-${stage}-final-snapshot`
+        : undefined,
+  })
 
-new aws.iam.RolePolicy('taskRolePolicy', {
-  role: taskRole.id,
-  policy: pulumi
-    .all([
-      dbHostSecretArn,
-      dbUserSecretArn,
-      dbPasswordSecretArn,
-      dbNameSecretArn,
-      jobsQueue.arn,
-      completedQueue.arn,
-    ])
-    .apply(([a, b, c, d, jobsArn, doneArn]) =>
-      JSON.stringify({
-        Version: '2012-10-17',
-        Statement: [
-          // Secrets
-          {
-            Effect: 'Allow',
-            Action: ['secretsmanager:GetSecretValue'],
-            Resource: [a, b, c, d],
-          },
-          // KMS decrypt for secrets (tighten later to specific key)
-          {
-            Effect: 'Allow',
-            Action: ['kms:Decrypt'],
-            Resource: '*',
-          },
-          // Consume jobs
-          {
-            Effect: 'Allow',
-            Action: [
-              'sqs:ReceiveMessage',
-              'sqs:DeleteMessage',
-              'sqs:GetQueueAttributes',
-              'sqs:ChangeMessageVisibility',
-            ],
-            Resource: jobsArn,
-          },
-          // Publish completions
-          {
-            Effect: 'Allow',
-            Action: ['sqs:SendMessage'],
-            Resource: doneArn,
-          },
-        ],
-      }),
-    ),
-})
+  new aws.rds.ClusterInstance('campaign-plan-db-instance', {
+    clusterIdentifier: dbCluster.id,
+    instanceClass: 'db.serverless',
+    engine: aws.rds.EngineType.AuroraPostgresql,
+    engineVersion: dbCluster.engineVersion,
+  })
 
-// ---------- ECS ----------
-const cluster = new aws.ecs.Cluster('campaign-plan-cluster', {})
+  // ---- Worker ECS SG (separate from base SG) ----
+  const privateSubnetIds = vpcSubnetIds.private
 
-const image = pulumi.interpolate`${repo.repositoryUrl}:${imageTag}`
+  const workerSg = new aws.ec2.SecurityGroup('campaign-plan-worker-sg', {
+    vpcId,
+    description: 'Campaign plan ECS worker SG',
+    egress: [
+      { protocol: '-1', fromPort: 0, toPort: 0, cidrBlocks: ['0.0.0.0/0'] },
+    ],
+  })
 
-const taskDef = new aws.ecs.TaskDefinition('taskdef', {
-  family: 'campaign-plan-worker',
-  cpu: '512',
-  memory: '1024',
-  networkMode: 'awsvpc',
-  requiresCompatibilities: ['FARGATE'],
-  executionRoleArn: execRole.arn,
-  taskRoleArn: taskRole.arn,
-  containerDefinitions: pulumi
-    .all([image, logGroup.name, jobsQueue.url, completedQueue.url])
-    .apply(([img, lg, jobsUrl, doneUrl]) =>
-      JSON.stringify([
-        {
-          name: 'campaign-plan-worker',
-          image: img,
-          essential: true,
-          logConfiguration: {
-            logDriver: 'awslogs',
-            options: {
-              'awslogs-group': lg,
-              'awslogs-region': region,
-              'awslogs-stream-prefix': 'ecs',
+  // Recommended: explicitly allow DB access from this worker SG
+  new aws.ec2.SecurityGroupRule('allow-db-from-worker', {
+    type: 'ingress',
+    securityGroupId: rdsSecurityGroup.id,
+    fromPort: 5432,
+    toPort: 5432,
+    protocol: 'tcp',
+    sourceSecurityGroupId: workerSg.id,
+  })
+
+  const region = aws.config.region!
+
+  // ---- Secrets Manager secret for DB_PASSWORD (so ECS can inject it) ----
+  const dbPasswordSecret = new aws.secretsmanager.Secret(
+    'campaign-plan-db-password-secret',
+    {
+      name: `CAMPAIGN_PLAN_DB_PASSWORD_${stage.toUpperCase()}`,
+    },
+  )
+
+  new aws.secretsmanager.SecretVersion(
+    'campaign-plan-db-password-secret-version',
+    {
+      secretId: dbPasswordSecret.id,
+      secretString: dbPassword,
+    },
+  )
+
+  // ---- Logs ----
+  const logGroup = new aws.cloudwatch.LogGroup('campaign-plan-logs', {
+    retentionInDays: 14,
+  })
+
+  // ---- IAM ----
+  const execRole = new aws.iam.Role('campaign-plan-task-exec-role', {
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+      Service: 'ecs-tasks.amazonaws.com',
+    }),
+  })
+
+  new aws.iam.RolePolicyAttachment('campaign-plan-exec-role-policy', {
+    role: execRole.name,
+    policyArn: aws.iam.ManagedPolicy.AmazonECSTaskExecutionRolePolicy,
+  })
+
+  const taskRole = new aws.iam.Role('campaign-plan-task-role', {
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+      Service: 'ecs-tasks.amazonaws.com',
+    }),
+  })
+
+  new aws.iam.RolePolicy('campaign-plan-task-role-policy', {
+    role: taskRole.id,
+    policy: pulumi
+      .all([jobsQueue.arn, completedQueue.arn, dbPasswordSecret.arn])
+      .apply(([jobsArn, doneArn, pwArn]) =>
+        JSON.stringify({
+          Version: '2012-10-17',
+          Statement: [
+            // Read DB password secret
+            {
+              Effect: 'Allow',
+              Action: ['secretsmanager:GetSecretValue'],
+              Resource: [pwArn],
             },
-          },
-          secrets: [
-            { name: 'DB_HOST', valueFrom: dbHostSecretArn },
-            { name: 'DB_USER', valueFrom: dbUserSecretArn },
-            { name: 'DB_PASSWORD', valueFrom: dbPasswordSecretArn },
-            { name: 'DB_NAME', valueFrom: dbNameSecretArn },
+            // Decrypt secrets (tighten later to key ARN if you use a CMK)
+            {
+              Effect: 'Allow',
+              Action: ['kms:Decrypt'],
+              Resource: '*',
+            },
+            // Consume jobs
+            {
+              Effect: 'Allow',
+              Action: [
+                'sqs:ReceiveMessage',
+                'sqs:DeleteMessage',
+                'sqs:GetQueueAttributes',
+                'sqs:ChangeMessageVisibility',
+              ],
+              Resource: jobsArn,
+            },
+            // Publish completion events
+            {
+              Effect: 'Allow',
+              Action: ['sqs:SendMessage'],
+              Resource: doneArn,
+            },
           ],
-          environment: [
-            { name: 'NODE_ENV', value: 'production' },
-            { name: 'QUEUE_URL', value: jobsUrl },
-            { name: 'COMPLETION_QUEUE_URL', value: doneUrl },
-          ],
-        },
-      ]),
-    ),
-})
+        }),
+      ),
+  })
 
-const service = new aws.ecs.Service('service', {
-  cluster: cluster.arn,
-  desiredCount: 1,
-  launchType: 'FARGATE',
-  taskDefinition: taskDef.arn,
-  networkConfiguration: {
-    assignPublicIp: false,
-    subnets: privateSubnetIds,
-    securityGroups: [serviceSg.id],
-  },
-})
+  // ---- ECS ----
+  const cluster = new aws.ecs.Cluster('campaign-plan-cluster', {})
 
-// ---------- Outputs ----------
-export const ecrRepoUrl = repo.repositoryUrl
-export const ecsClusterName = cluster.name
-export const ecsServiceName = service.name
+  const taskDef = new aws.ecs.TaskDefinition('campaign-plan-taskdef', {
+    family: `campaign-plan-worker-${stage}`,
+    cpu: '512',
+    memory: '1024',
+    networkMode: 'awsvpc',
+    requiresCompatibilities: ['FARGATE'],
+    executionRoleArn: execRole.arn,
+    taskRoleArn: taskRole.arn,
+    containerDefinitions: pulumi
+      .all([
+        imageUri,
+        logGroup.name,
+        jobsQueue.url,
+        completedQueue.url,
+        dbCluster.endpoint,
+        dbCluster.masterUsername,
+        dbCluster.databaseName,
+        dbPasswordSecret.arn,
+      ])
+      .apply(
+        ([img, lg, jobsUrl, doneUrl, dbHost, dbUserOut, dbNameOut, pwArn]) =>
+          JSON.stringify([
+            {
+              name: 'campaign-plan-worker',
+              image: img,
+              essential: true,
+              logConfiguration: {
+                logDriver: 'awslogs',
+                options: {
+                  'awslogs-group': lg,
+                  'awslogs-region': region,
+                  'awslogs-stream-prefix': 'ecs',
+                },
+              },
+              environment: [
+                { name: 'NODE_ENV', value: 'production' },
+                { name: 'QUEUE_URL', value: jobsUrl },
+                { name: 'COMPLETION_QUEUE_URL', value: doneUrl },
+                { name: 'DB_HOST', value: dbHost },
+                { name: 'DB_USER', value: dbUserOut },
+                { name: 'DB_NAME', value: dbNameOut },
+              ],
+              secrets: [{ name: 'DB_PASSWORD', valueFrom: pwArn }],
+            },
+          ]),
+      ),
+  })
 
-export const jobsQueueUrl = jobsQueue.url
-export const jobsQueueArn = jobsQueue.arn
-export const completedQueueUrl = completedQueue.url
-export const completedQueueArn = completedQueue.arn
-export const jobsDlqUrl = jobsDlq.url
+  const service = new aws.ecs.Service('campaign-plan-service', {
+    cluster: cluster.arn,
+    desiredCount: select({ dev: 1, qa: 1, prod: 2 }),
+    launchType: 'FARGATE',
+    taskDefinition: taskDef.arn,
+    networkConfiguration: {
+      assignPublicIp: false,
+      subnets: privateSubnetIds,
+      securityGroups: [workerSg.id],
+    },
+  })
+
+  return {
+    environment,
+    jobsQueueUrl: jobsQueue.url,
+    completedQueueUrl: completedQueue.url,
+    dlqUrl: dlq.url,
+    dbEndpoint: dbCluster.endpoint,
+    ecsClusterName: cluster.name,
+    ecsServiceName: service.name,
+  }
+}
