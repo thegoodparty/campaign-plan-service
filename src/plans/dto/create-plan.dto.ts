@@ -2,8 +2,8 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 export const createPlanSchema = z.object({
-  campaignId: z.number().int().positive(),
-  version: z.number().int().positive(),
+  campaignId: z.coerce.number().int().positive(),
+  version: z.coerce.number().int().positive(),
   aiModel: z.string().min(1),
   sourceReason: z.string().optional(),
 })
