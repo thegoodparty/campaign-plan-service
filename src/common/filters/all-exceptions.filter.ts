@@ -6,7 +6,14 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common'
-import { FastifyReply } from 'fastify'
+import { Prisma } from '@prisma-generated/client'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
+interface HttpExceptionBody {
+  message?: string | string[]
+  error?: string
+  errors?: unknown
+}
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -14,6 +21,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
+    const request = ctx.getRequest<FastifyRequest>()
     const reply = ctx.getResponse<FastifyReply>()
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR
@@ -26,18 +34,30 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       if (typeof response === 'string') {
         message = response
-      } else if (typeof response === 'object' && response !== null) {
-        const res = response as Record<string, unknown>
-        message = (res.message as string) ?? (res.error as string) ?? message
+      } else {
+        const body = response as HttpExceptionBody
+
+        if (Array.isArray(body.message)) {
+          message = body.error ?? exception.message
+          details = body.message
+        } else {
+          message = body.message ?? body.error ?? exception.message
+        }
 
         // ZodValidationException from nestjs-zod puts errors here
-        if (res.errors) {
-          details = res.errors
+        if (body.errors) {
+          details = body.errors
         }
       }
+    } else if (
+      exception instanceof Prisma.PrismaClientKnownRequestError &&
+      exception.code === 'P2025'
+    ) {
+      status = HttpStatus.NOT_FOUND
+      message = 'Record not found'
     } else {
       this.logger.error(
-        'Unhandled exception',
+        `Unhandled exception on ${request.method} ${request.url}`,
         exception instanceof Error ? exception.stack : exception,
       )
     }
@@ -45,6 +65,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     void reply.status(status).send({
       code: status,
       message,
+      method: request.method,
+      path: request.url,
       ...(details !== undefined ? { details } : {}),
     })
   }
