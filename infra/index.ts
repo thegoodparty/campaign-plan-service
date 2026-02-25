@@ -1,7 +1,7 @@
 import * as aws from '@pulumi/aws'
 import * as pulumi from '@pulumi/pulumi'
 
-export = () => {
+export = async () => {
   const config = new pulumi.Config()
 
   /**
@@ -45,9 +45,27 @@ export = () => {
   // You can replace this with a dedicated SG later.
   const vpcSecurityGroupIds = ['sg-01de8d67b0f0ec787']
 
-  // ---- DB password (set via pulumi config as a secret) ----
-  // Example: pulumi config set --secret dbPassword "..."
-  const dbPassword = pulumi.secret(config.require('dbPassword'))
+  // ---- Secrets (pulled from Secrets Manager) ----
+  const secretName = select({
+    dev: 'CAMPAIGN_PLAN_SERVICE_DEV',
+    qa: 'CAMPAIGN_PLAN_SERVICE_QA',
+    prod: 'CAMPAIGN_PLAN_SERVICE_PROD',
+  })
+
+  const secretVersion = await aws.secretsmanager.getSecretVersion({
+    secretId: secretName,
+  })
+
+  const secret = JSON.parse(secretVersion.secretString || '{}') as Record<
+    string,
+    string
+  >
+
+  if (!secret.DB_PASSWORD) {
+    throw new Error('DB_PASSWORD must be set in the secret.')
+  }
+
+  const dbPassword = pulumi.secret(secret.DB_PASSWORD)
 
   // ---- SQS: jobs + completed + DLQ (FIFO) ----
   const dlq = new aws.sqs.Queue('campaign-plan-dlq', {
