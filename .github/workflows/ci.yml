@@ -12,7 +12,7 @@ permissions:
 
 env:
   AWS_REGION: us-west-2
-  IMAGE_URI: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+  IMAGE_URI: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
 jobs:
   main:
