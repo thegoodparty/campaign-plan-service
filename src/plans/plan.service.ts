@@ -1,27 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@/prisma/prisma.service'
+import type { CampaignPlan } from '@prisma-generated/client'
 import type { CreatePlanInput } from './dto/create-plan.dto'
 
 @Injectable()
 export class PlanService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreatePlanInput) {
+  // Queues a plan for generation. Only persists the request metadata
+  // (campaignId, version, aiModel) with status QUEUED. The actual plan
+  // content (sections, tasks) will be populated by the AI service once built.
+  async create(
+    data: CreatePlanInput,
+  ): Promise<{ planId: string; status: CampaignPlan['status'] }> {
     const idempotencyKey = `${data.campaignId}:${data.version}`
 
     const existing = await this.prisma.campaignPlan.findUnique({
       where: { idempotencyKey },
+      select: { id: true, status: true },
     })
 
     if (existing) {
       return { planId: existing.id, status: existing.status }
     }
 
-    const plan = await this.prisma.campaignPlan.create({
+    const { id, status } = await this.prisma.campaignPlan.create({
       data: { ...data, idempotencyKey },
+      select: { id: true, status: true },
     })
 
-    return { planId: plan.id, status: plan.status }
+    return { planId: id, status }
   }
 
   async findOne(planId: string) {
@@ -38,14 +46,7 @@ export class PlanService {
   }
 
   async remove(planId: string): Promise<void> {
-    const plan = await this.prisma.campaignPlan.findUnique({
-      where: { id: planId },
-      select: { id: true },
-    })
-
-    if (!plan) {
-      throw new NotFoundException(`Plan ${planId} not found`)
-    }
+    await this.findOne(planId)
 
     await this.prisma.campaignPlan.delete({
       where: { id: planId },

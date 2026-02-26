@@ -68,7 +68,7 @@ export class TaskController {
   async remove(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
     @Param('taskId', new ParseUUIDPipe({ version: '7' })) taskId: string,
-  ) {
+  ): Promise<void> {
     await this.taskService.remove(planId, taskId)
   }
 }
