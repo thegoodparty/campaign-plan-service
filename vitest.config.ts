@@ -23,6 +23,7 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'json'],
     },
     include: ['src/**/*.test.ts', 'test/**/*.{test,spec}.ts'],
+    exclude: ['test/integration/**'],
     env: dotenv.parse(
       readFileSync(fileURLToPath(new URL('./.env.test', import.meta.url))),
     ),
