@@ -28,7 +28,7 @@ export class PlanController {
   @Get(':planId')
   async findOne(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
-  ) {
+  ): Promise<CampaignPlan> {
     return this.planService.findOne(planId)
   }
 
@@ -36,7 +36,7 @@ export class PlanController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('planId', new ParseUUIDPipe({ version: '7' })) planId: string,
-  ) {
+  ): Promise<void> {
     await this.planService.remove(planId)
   }
 }

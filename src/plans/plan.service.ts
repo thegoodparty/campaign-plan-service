@@ -46,14 +46,7 @@ export class PlanService {
   }
 
   async remove(planId: string): Promise<void> {
-    const plan = await this.prisma.campaignPlan.findUnique({
-      where: { id: planId },
-      select: { id: true },
-    })
-
-    if (!plan) {
-      throw new NotFoundException(`Plan ${planId} not found`)
-    }
+    await this.findOne(planId)
 
     await this.prisma.campaignPlan.delete({
       where: { id: planId },
