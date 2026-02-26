@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "dist", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", "vitest.config.ts", "infra"],
   "compilerOptions": {
     "module": "NodeNext",
     "declaration": true,
