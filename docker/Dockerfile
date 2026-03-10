@@ -9,11 +9,12 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
 RUN npm ci --omit=dev --legacy-peer-deps \
+  && npx prisma generate --schema=prisma/schema/schema.prisma \
   && npm cache clean --force
 
 COPY dist ./dist
-COPY prisma ./prisma
 
 ENV NODE_ENV=production
 
