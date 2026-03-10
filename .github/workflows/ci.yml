@@ -34,6 +34,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Generate Prisma Client
+        run: npm run generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci_db
       - run: npx tsc --noEmit
       - run: npx eslint "{src,apps,libs,test}/**/*.{ts,js}" --max-warnings=0
       - run: npx prettier --check "{src,apps,libs,test}/**/*.{ts,js,json,md,yml,yaml}"
