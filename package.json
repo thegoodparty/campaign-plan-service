@@ -23,8 +23,7 @@
     "test:cov": "vitest run --coverage",
     "test:integration": "vitest run test/integration",
     "test:e2e": "playwright test --config=test/playwright.config.ts",
-    "hooks:install": "husky",
-    "postinstall": "npm ci --prefix infra"
+    "hooks:install": "husky"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
