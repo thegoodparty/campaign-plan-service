@@ -93,15 +93,18 @@ jobs:
 
       # Docker build and push
       - name: Configure AWS Credentials
+        if: github.event_name == 'push'
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        if: github.event_name == 'push'
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push Docker image
+        if: github.event_name == 'push'
         run: |
           docker build -t "${IMAGE_URI}" -f docker/Dockerfile .
           docker push "${IMAGE_URI}"
