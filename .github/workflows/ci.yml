@@ -4,6 +4,15 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
 
 permissions:
   id-token: write
@@ -15,43 +24,39 @@ env:
   IMAGE_URI: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
 jobs:
-  main:
-    name: Build & Deploy
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || github.ref_name }}
-      cancel-in-progress: false
-    outputs:
-      environment: ${{ steps.context.outputs.environment }}
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
-
       - run: npm ci
-
-      # Validation
       - name: Generate Prisma Client
         run: npm run generate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci_db
-
       - run: npx tsc --noEmit
-
       - run: npx eslint "{src,apps,libs,test}/**/*.{ts,js}" --max-warnings=0
-
       - run: npx prettier --check "{src,apps,libs,test}/**/*.{ts,js,json,md,yml,yaml}"
 
-      - run: npm run test:cov
-
-      - name: Build
-        run: npm run build
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma Client
+        run: npm run generate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci_db
-
+      - run: npm run test:cov
       - name: Calculate overall coverage
         id: coverage-calc
         if: always()
@@ -67,14 +72,12 @@ jobs:
           else
             echo "overall_pct=0" >> $GITHUB_OUTPUT
           fi
-
       - name: Publish coverage to PR + summary
         if: always()
         continue-on-error: true
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           threshold-icons: "{0: '🔴', 80: '🟠', 90: '🟢'}"
-
       - name: Add overall coverage to PR comment
         if: always() && github.event_name == 'pull_request' && steps.coverage-calc.outputs.overall_pct != '0'
         uses: peter-evans/create-or-update-comment@v4
@@ -85,55 +88,68 @@ jobs:
 
             **${{ steps.coverage-calc.outputs.overall_pct }}%** (average of lines, statements, functions, and branches)
 
-      # Determine deployment context
+  deploy:
+    name: Build & Deploy
+    needs: [lint, test]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
+    outputs:
+      environment: ${{ steps.context.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma Client
+        run: npm run generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci_db
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci_db
       - name: Determine deployment context
         id: context
         run: |
-          echo "environment=dev" >> "$GITHUB_OUTPUT"
-
-      # Docker build and push
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=dev" >> "$GITHUB_OUTPUT"
+          fi
       - name: Configure AWS Credentials
-        if: github.event_name == 'push'
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Login to Amazon ECR
-        if: github.event_name == 'push'
         uses: aws-actions/amazon-ecr-login@v2
-
       - name: Build and push Docker image
-        if: github.event_name == 'push'
         run: |
           docker build -t "${IMAGE_URI}" -f docker/Dockerfile .
           docker push "${IMAGE_URI}"
-
-      # Pulumi deployment (branch pushes only — no preview environments)
       - name: Install Pulumi
-        if: github.event_name == 'push'
         uses: pulumi/actions@v6
         with:
           pulumi-version: "^3"
-
       - name: Run Pulumi Deploy
-        if: github.event_name == 'push'
         id: pulumi
         run: |
           cd infra
           npm ci
           sh deploy.sh ${{ steps.context.outputs.environment }}
-
-      # Slack notifications
       - name: Notify Slack on Deploy Success
-        if: success() && github.event_name == 'push'
+        if: success()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           fields: repo,commit,author,action,eventName,ref,workflow,took
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
       - name: Notify Slack on Deploy Failure
         if: failure()
         uses: 8398a7/action-slack@v3
@@ -143,40 +159,33 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  tests:
+  e2e:
     name: E2E Tests
-    needs: main
-    if: github.event_name == 'push'
+    needs: deploy
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
-
       - run: npm ci
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-
       - name: Run Playwright tests
         id: run-tests
         env:
-          API_BASE_URL: ${{ needs.main.outputs.environment == 'qa' && secrets.QA_SERVICE_URL || secrets.DEV_SERVICE_URL }}
+          API_BASE_URL: ${{ needs.deploy.outputs.environment == 'qa' && secrets.QA_SERVICE_URL || secrets.DEV_SERVICE_URL }}
         run: npm run test:e2e
-
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-reports-${{ needs.main.outputs.environment }}-${{ github.sha }}
+          name: playwright-reports-${{ needs.deploy.outputs.environment }}-${{ github.sha }}
           path: |
             test/playwright-report
             test/test-results
-
       - name: Parse test results
         if: always()
         id: test-results
@@ -205,7 +214,6 @@ jobs:
             echo "total_tests=0" >> $GITHUB_OUTPUT
             echo "tests_ran=false" >> $GITHUB_OUTPUT
           fi
-
       - name: Notify Slack on Test Success
         if: steps.run-tests.outcome == 'success'
         uses: 8398a7/action-slack@v3
@@ -216,12 +224,11 @@ jobs:
               text: 'E2E Tests Passed',
               attachments: [{
                 color: 'good',
-                text: `${{ github.repository }} - ${{ github.ref_name }} by ${{ github.actor }}\nEnvironment: ${{ needs.main.outputs.environment }}\n${{ steps.test-results.outputs.passed_count }}/${{ steps.test-results.outputs.total_tests }} tests passed\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View>`
+                text: `${{ github.repository }} - ${{ github.ref_name }} by ${{ github.actor }}\nEnvironment: ${{ needs.deploy.outputs.environment }}\n${{ steps.test-results.outputs.passed_count }}/${{ steps.test-results.outputs.total_tests }} tests passed\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View>`
               }]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
       - name: Notify Slack on Test Failure
         if: steps.run-tests.outcome == 'failure' || failure()
         uses: 8398a7/action-slack@v3
@@ -232,7 +239,7 @@ jobs:
               "text": "${{ steps.test-results.outputs.tests_ran == 'true' && 'E2E Tests Failed (Non-blocking)' || 'Test Environment Not Ready' }}",
               "attachments": [{
                 "color": "${{ steps.test-results.outputs.tests_ran == 'true' && 'warning' || 'danger' }}",
-                "text": "${{ github.repository }} - ${{ github.ref_name }} by ${{ github.actor }}\nEnvironment: ${{ needs.main.outputs.environment }}\n\n${{ steps.test-results.outputs.tests_ran == 'true' && format('{0}/{1} tests failed\n{2}/{1} tests passed\n\nFailed Tests:\n{3}', steps.test-results.outputs.failed_count, steps.test-results.outputs.total_tests, steps.test-results.outputs.passed_count, steps.test-results.outputs.failed_tests) || 'Tests did not run - environment health check failed or test setup error occurred.' }}\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View>"
+                "text": "${{ github.repository }} - ${{ github.ref_name }} by ${{ github.actor }}\nEnvironment: ${{ needs.deploy.outputs.environment }}\n\n${{ steps.test-results.outputs.tests_ran == 'true' && format('{0}/{1} tests failed\n{2}/{1} tests passed\n\nFailed Tests:\n{3}', steps.test-results.outputs.failed_count, steps.test-results.outputs.total_tests, steps.test-results.outputs.passed_count, steps.test-results.outputs.failed_tests) || 'Tests did not run - environment health check failed or test setup error occurred.' }}\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View>"
               }]
             }
         env:
