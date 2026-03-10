@@ -6,6 +6,7 @@
     "test",
     "dist",
     "e2e-tests",
+    "infra",
     "prisma/generated",
     "**/*spec.ts",
     "**/*.test.ts",
