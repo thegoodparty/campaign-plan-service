@@ -221,6 +221,29 @@ export = async () => {
     policyArn: aws.iam.ManagedPolicy.AmazonECSTaskExecutionRolePolicy,
   })
 
+  // execRole needs secretsmanager + kms to inject secrets before container start
+  new aws.iam.RolePolicy('campaign-plan-exec-role-secrets-policy', {
+    role: execRole.id,
+    policy: dbPasswordSecret.arn.apply((pwArn: string) =>
+      JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Action: ['secretsmanager:GetSecretValue'],
+            Resource: [pwArn],
+          },
+          // Decrypt secrets (tighten later to key ARN if you use a CMK)
+          {
+            Effect: 'Allow',
+            Action: ['kms:Decrypt'],
+            Resource: '*',
+          },
+        ],
+      }),
+    ),
+  })
+
   const taskRole = new aws.iam.Role('campaign-plan-task-role', {
     assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
       Service: 'ecs-tasks.amazonaws.com',
@@ -230,23 +253,11 @@ export = async () => {
   new aws.iam.RolePolicy('campaign-plan-task-role-policy', {
     role: taskRole.id,
     policy: pulumi
-      .all([jobsQueue.arn, completedQueue.arn, dbPasswordSecret.arn])
-      .apply(([jobsArn, doneArn, pwArn]) =>
+      .all([jobsQueue.arn, completedQueue.arn])
+      .apply(([jobsArn, doneArn]) =>
         JSON.stringify({
           Version: '2012-10-17',
           Statement: [
-            // Read DB password secret
-            {
-              Effect: 'Allow',
-              Action: ['secretsmanager:GetSecretValue'],
-              Resource: [pwArn],
-            },
-            // Decrypt secrets (tighten later to key ARN if you use a CMK)
-            {
-              Effect: 'Allow',
-              Action: ['kms:Decrypt'],
-              Resource: '*',
-            },
             // Consume jobs
             {
               Effect: 'Allow',
